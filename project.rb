@@ -13,12 +13,16 @@ class Project
 
   def initialize(name)
     @file = "#{ROOT}/#{name}.json"
+    @tasks = load_tasks
   end
 
   def run_tasks
-    @tasks = load_tasks
     threads = setup_tasks.map {|task| task.run }
     threads.each {|tred| tred.join }
+  end
+
+  def tasks
+    setup_tasks
   end
 
 private
@@ -38,6 +42,8 @@ private
 end
 
 class Task
+  attr_accessor :cmd
+
   def initialize(options)
     @cmd, @args = options['command'], options['args']
   end
@@ -54,6 +60,11 @@ class Task
   end
 
   def run
-    Thread.new { `#{command}`}
+    Thread.new { `#{command}` }
+    #{}`#{command}`
+      #return system
+    #end
+    #rescue Errno::ENOENT
+     # puts "hej hej"
   end
 end

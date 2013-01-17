@@ -14,57 +14,78 @@ class Desky < Thor
   map "-e" => :edit
   map "-n" => :new
   map "-c" => :new
+  map "-v" => :view
 
-  desc 'open PROJECT', '-o | Opens your project!'
-  #method_option :test,  :aliases => "-t", :desc => "This is a test.."
+  desc '-o | open PROJECT', 'Opens your project!'
   def open(name)
-    if project_exists? name
-      say_status :open, "Running project #{name}"
-      project = Project.new(name)
-      project.run_tasks
-    else
-      project_missing name
+    check_if_exists_or_exit name
+    say "Running '#{name}':"
+    say_status :open, project_file(name)
+    project = Project.new(name)
+    tasks = project.tasks
+    threads = []
+    tasks.each do |task|
+      threads << Thread.new(task) { |atask|
+        say_status :starting, task.cmd
+        run("#{task.command}", :verbose => false, :capture => false)
+        #say_status :finished, ret.inspect
+        #end
+      }
+      #ret = task.run
+      #ret.join
+      #puts ret
     end
+    threads.each {|athread| athread.join }
+
   end
 
   desc 'list', "Lists all your projects."
-  method_option :horizon, :type => :boolean, :aliases => "-h", :desc => "List horizontaly", :default => true
+  method_option :horizontal, :type => :boolean, :aliases => "-h", :desc => "List horizontaly", :default => true
   method_option :vertical, :type => :boolean, :aliases => "-v", :desc => "List verticaly"
   def list
     projects = Dir.glob("projects/*.json").map { |file| file[/\/(.*)\./, 1] }
     if options.vertical?
-      projects.each { |file| say file }
+      say "Projects:"
+      projects.each { |file| say "  #{file}" }
+      say "\n"
     else
       print_in_columns projects
     end
   end
 
-  desc 'new PROJECT', '-n | Make a new project.'
+  desc '-v | view PROJECT', 'View a project and its tasks.'
+  def view(name)
+    check_if_exists_or_exit name
+    project = Project.new(name)
+    say "Project:\n  #{name} - #{project_file(name)}\n\nCommands:"
+    print_table project.tasks.map { |name, options| ["  #{options['command']}", options['args']]}
+    say "\n"
+  end
+
+  desc '-n | new PROJECT', 'Make a new project.'
   def new(name)
     file = project_file name
-    str = { task: { command: '', args: ''} }.to_json
+    str = { task: { command: 'desky', args: "view #{name}"} }.to_json
     test = create_file file, str
   end
 
-  desc 'edit PROJECT', '-e | Edit your project. '
+  desc '-e | edit PROJECT', 'Edit your project. '
   def edit(name)
-    if project_exists? name
-      system "nano #{project_file name}"
-    else
-      project_missing name
-    end
+    check_if_exists_or_exit name
+    system "nano #{project_file name}"
   end
 
-  desc 'delete PROJECT', '-d | Delete a project. '
+  desc '-d | delete PROJECT', 'Delete a project. '
   def delete(name)
-    if project_exists? name
-      remove_file project_file(name)
-    else
-      project_missing name
-    end
+    check_if_exists_or_exit name
+    remove_file project_file(name)
   end
 
 private
+  def check_if_exists_or_exit(name)
+    project_missing name and exit unless project_exists? name
+  end
+
   def project_missing(name)
     say_status :error, "Project '#{name}' does not exist.", :red
   end
