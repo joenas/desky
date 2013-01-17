@@ -9,25 +9,25 @@ class Project
     end
   end
 
-  ROOT = "#{File.dirname(__FILE__)}"
+  ROOT = "#{File.dirname(__FILE__)}/projects"
 
   def initialize(name)
-    @file = "#{ROOT}/projects/#{name}.json"
-    @tasks = load_tasks
+    @file = "#{ROOT}/#{name}.json"
   end
 
   def run_tasks
+    @tasks = load_tasks
     threads = setup_tasks.map {|task| task.run }
     threads.each {|tred| tred.join }
   end
 
 private
   def load_tasks
-    puts "Loading #{@file}"
+    #puts "Loading #{@file}"
     json = File.read(@file)
     JSON.parse(json)
   rescue Errno::ENOENT
-    raise ExitError, "Error: File 'projects/#{@file}' doesnt exist, please create."
+    raise ExitError, "Error: File '#{@file}' doesnt exist, please create."
   rescue JSON::ParserError => error
     raise ExitError, "JSON Error: #{error.message.split("\n").first}"
   end
