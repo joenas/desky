@@ -2,10 +2,11 @@
 require 'thor'
 require 'json/pure'
 require_relative 'project'
+require 'pathname'
 
 class Desky < Thor
   include Thor::Actions
-
+  APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath)
   EDITOR = 'nano'
 
   map "-o" => :open
@@ -30,19 +31,21 @@ class Desky < Thor
         #run("#{task.command}", :verbose => false, :capture => false)
         ret = `#{task.command}` rescue say_status(:error, "#{task.cmd}", :red)
         print_result ret, task.cmd if task.capture
+        say_status :stopping, "#{task.cmd}, status #{$?.exitstatus}", :blue
       }
     end
     threads.each {|task, athread|
       athread.join if task.wait
     }
-
+    rescue Interrupt
+      say_status :interrupt, "User exit", :red
   end
 
   desc 'list', "Lists all your projects."
   method_option :horizontal, :type => :boolean, :aliases => "-h", :desc => "List horizontaly", :default => true
   method_option :vertical, :type => :boolean, :aliases => "-v", :desc => "List verticaly"
   def list
-    projects = Dir.glob("projects/*.json").map { |file| file[/\/(.*)\./, 1] }
+    projects = Dir.glob("#{APP_ROOT}/projects/*.json").map { |file| file[/\/*(\w*)\./, 1] }
     if options.vertical?
       say "Projects:"
       projects.each { |file| say "  #{file}" }
@@ -92,7 +95,7 @@ private
   end
 
   def project_root
-    "#{destination_root}/projects"
+    "#{APP_ROOT}/projects"
   end
 
   def project_exists?(name)
@@ -106,8 +109,13 @@ private
         say_status cmd, line, :blue
       }
     else
-      puts result.inspect
+      #puts result.inspect
     end
   end
+
+  def self.source_root
+    File.dirname(__FILE__)
+  end
 end
+#begin
 Desky.start
