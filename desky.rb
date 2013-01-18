@@ -23,19 +23,18 @@ class Desky < Thor
     say_status :open, project_file(name)
     project = Project.new(name)
     tasks = project.tasks
-    threads = []
+    threads = {}
     tasks.each do |task|
-      threads << Thread.new(task) { |atask|
-        say_status :starting, task.cmd
-        run("#{task.command}", :verbose => false, :capture => false)
-        #say_status :finished, ret.inspect
-        #end
+      say_status :running, task.cmd
+      threads[task] = Thread.new {
+        #run("#{task.command}", :verbose => false, :capture => false)
+        ret = `#{task.command}` rescue say_status(:error, "#{task.cmd}", :red)
+        print_result ret, task.cmd if task.capture
       }
-      #ret = task.run
-      #ret.join
-      #puts ret
     end
-    threads.each {|athread| athread.join }
+    threads.each {|task, athread|
+      athread.join if task.wait
+    }
 
   end
 
@@ -53,29 +52,27 @@ class Desky < Thor
     end
   end
 
-  desc '-v | view PROJECT', 'View a project and its tasks.'
+  desc 'view PROJECT (-v)', 'View a project and its tasks.'
   def view(name)
     check_if_exists_or_exit name
     project = Project.new(name)
     say "Project:\n  #{name} - #{project_file(name)}\n\nCommands:"
-    print_table project.tasks.map { |name, options| ["  #{options['command']}", options['args']]}
+    print_table project.tasks.map { |task| ["  #{task.cmd}", task.args] }
     say "\n"
   end
 
-  desc '-n | new PROJECT', 'Make a new project.'
+  desc 'new PROJECT (-n)', 'Make a new project.'
   def new(name)
-    file = project_file name
-    str = { task: { command: 'desky', args: "view #{name}"} }.to_json
-    test = create_file file, str
+    create_file project_file(name), { task: { command: 'desky', args: "view #{name}"} }.to_json
   end
 
-  desc '-e | edit PROJECT', 'Edit your project. '
+  desc 'edit PROJECT (-e)', 'Edit your project. '
   def edit(name)
     check_if_exists_or_exit name
     system "nano #{project_file name}"
   end
 
-  desc '-d | delete PROJECT', 'Delete a project. '
+  desc 'delete PROJECT (-d)', 'Delete a project. '
   def delete(name)
     check_if_exists_or_exit name
     remove_file project_file(name)
@@ -101,6 +98,16 @@ private
   def project_exists?(name)
     File.exists? project_file(name)
   end
-end
 
+  def print_result(result, cmd)
+    case result
+    when String
+      result.split("\n").each { |line|
+        say_status cmd, line, :blue
+      }
+    else
+      puts result.inspect
+    end
+  end
+end
 Desky.start

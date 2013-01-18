@@ -42,10 +42,11 @@ private
 end
 
 class Task
-  attr_accessor :cmd
+  attr_accessor :cmd, :wait, :capture, :args
 
   def initialize(options)
     @cmd, @args = options['command'], options['args']
+    @wait, @capture = options['wait'], options['capture']
   end
 
   def command
