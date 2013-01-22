@@ -16,18 +16,12 @@ class Project
     @tasks = load_tasks
   end
 
-  def run_tasks
-    threads = setup_tasks.map {|task| task.run }
-    threads.each {|tred| tred.join }
-  end
-
   def tasks
     setup_tasks
   end
 
 private
   def load_tasks
-    #puts "Loading #{@file}"
     json = File.read(@file)
     JSON.parse(json)
   rescue Errno::ENOENT
@@ -61,19 +55,27 @@ class Task
     end
   end
 
-  def run_in_thread(error_handler, result_handler)
-    Thread.new(cmd) do |cmd|
-      result = `#{command}` rescue error_handler.call(cmd)
-      result_handler.call(cmd, result) if capture
-      yield self if block_given?
+  def call(error_handler = default_error_handler, result_handler = default_result_handler)
+    Thread.new do
+      begin
+        result = `#{command}`
+        result_handler.call(@cmd, result) if @capture
+        yield self if block_given?
+      rescue => error
+        error_handler.call(@cmd, error.message)
+      end
     end
   end
 
-  # def run
-  #   lambda {
-  #     ret = `#{command}` rescue say_status(:error, "#{cmd}", :red)
-  #     print_result ret, cmd if capture
-  #     say_status :stopping, "#{cmd}, status #{$?.exitstatus}", :blue
-  #   }
-  # end
+  def default_result_handler
+    lambda { |cmd, result|
+      puts "#{cmd}: #{result}"
+    }
+  end
+
+  def default_error_handler
+    lambda {|cmd, msg|
+      puts "Error: #{cmd} msg"
+    }
+  end
 end

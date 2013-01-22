@@ -11,7 +11,6 @@ class Desky < Thor
 
   map "-o" => :open
   map "-d" => :delete
-  #map "-l" => :list
   map "-e" => :edit
   map "-n" => :new
   map "-c" => :new
@@ -20,7 +19,7 @@ class Desky < Thor
   desc '-o | open PROJECT', 'Opens your project!'
   def open(name)
     check_if_exists_or_exit name
-    say "Running '#{name}':"
+    say "\n" #"Running '#{name}':"
     say_status :open, project_file(name)
     run_in_threads name
     rescue Interrupt
@@ -50,7 +49,7 @@ class Desky < Thor
     say "\n"
   end
 
-  desc 'new PROJECT (-n)', 'Make a new project.'
+  desc 'new PROJECT (-n | -c)', 'Make a new project.'
   def new(name)
     create_file project_file(name), { task: { command: 'desky', args: "view #{name}"} }.to_json
   end
@@ -88,12 +87,9 @@ private
     File.exists? project_file(name)
   end
 
-  def run_task
-    #->(task){
+  def run_after_task
     lambda { |task|
-      # ret = `#{task.command}` rescue say_status(:error, "#{task.cmd}", :red)
-      # print_result task.cmd, ret if task.capture
-      say_status :stopping, "#{task.cmd}, status #{$?.exitstatus}", :blue
+      say_status :finished, "#{task.cmd}, status #{$?.exitstatus}", :blue
     }
   end
 
@@ -104,8 +100,8 @@ private
   end
 
   def error_handler
-    lambda { |cmd|
-      say_status :error, cmd, :red
+    lambda { |cmd, msg|
+      say_status :error, "#{cmd}: #{msg}", :red
     }
   end
 
@@ -116,8 +112,8 @@ private
         say_status status, line, :blue
       }
     else
-      #puts result.inspect
-      puts "something"
+      puts result.inspect
+      #puts "something"
     end
   end
 
@@ -130,7 +126,7 @@ private
     @tasks = project.tasks.map { |task|
       say_status :running, task.cmd
       {
-        thread: task.run_in_thread(error_handler, result_handler, &run_task),
+        thread: task.call(error_handler, result_handler, &run_after_task),
         wait: task.wait
       }
     }.each { |task |
