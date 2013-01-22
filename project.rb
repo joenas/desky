@@ -20,6 +20,10 @@ class Project
     setup_tasks
   end
 
+  def show_tasks(presenter)
+    presenter.call tasks.map { |task| task.show }
+  end
+
 private
   def load_tasks
     json = File.read(@file)
@@ -27,7 +31,7 @@ private
   rescue Errno::ENOENT
     raise ExitError, "Error: File '#{@file}' doesnt exist, please create."
   rescue JSON::ParserError => error
-    raise ExitError, "JSON Error: #{error.message.split("\n").first}"
+    raise ExitError, "JSON Error: #{error.message}"
   end
 
   def setup_tasks
@@ -55,6 +59,18 @@ class Task
     end
   end
 
+  def show
+    ["  #{@cmd}", @args]
+  end
+
+  def wait?
+    @wait
+  end
+
+  def startup
+    yield @cmd
+  end
+
   def call(error_handler = default_error_handler, result_handler = default_result_handler)
     Thread.new do
       begin
@@ -67,6 +83,7 @@ class Task
     end
   end
 
+private
   def default_result_handler
     lambda { |cmd, result|
       puts "#{cmd}: #{result}"
