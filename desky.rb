@@ -22,23 +22,9 @@ class Desky < Thor
     check_if_exists_or_exit name
     say "Running '#{name}':"
     say_status :open, project_file(name)
-    project = Project.new(name)
-    tasks = project.tasks
-    threads = {}
-    tasks.each do |task|
-      say_status :running, task.cmd
-      threads[task] = Thread.new {
-        #run("#{task.command}", :verbose => false, :capture => false)
-        ret = `#{task.command}` rescue say_status(:error, "#{task.cmd}", :red)
-        print_result ret, task.cmd if task.capture
-        say_status :stopping, "#{task.cmd}, status #{$?.exitstatus}", :blue
-      }
-    end
-    threads.each {|task, athread|
-      athread.join if task.wait
-    }
+    run_in_threads name
     rescue Interrupt
-      say_status :interrupt, "User exit", :red
+      say_status :exit, "User interrupt!\n", :red
   end
 
   desc 'list', "Lists all your projects."
@@ -102,19 +88,54 @@ private
     File.exists? project_file(name)
   end
 
-  def print_result(result, cmd)
+  def run_task
+    #->(task){
+    lambda { |task|
+      # ret = `#{task.command}` rescue say_status(:error, "#{task.cmd}", :red)
+      # print_result task.cmd, ret if task.capture
+      say_status :stopping, "#{task.cmd}, status #{$?.exitstatus}", :blue
+    }
+  end
+
+  def result_handler
+    lambda { |command, result|
+      print_result command, result
+    }
+  end
+
+  def error_handler
+    lambda { |cmd|
+      say_status :error, cmd, :red
+    }
+  end
+
+  def print_result(status, result)
     case result
     when String
       result.split("\n").each { |line|
-        say_status cmd, line, :blue
+        say_status status, line, :blue
       }
     else
       #puts result.inspect
+      puts "something"
     end
   end
 
   def self.source_root
     File.dirname(__FILE__)
+  end
+
+  def run_in_threads(name)
+    project = Project.new(name)
+    @tasks = project.tasks.map { |task|
+      say_status :running, task.cmd
+      {
+        thread: task.run_in_thread(error_handler, result_handler, &run_task),
+        wait: task.wait
+      }
+    }.each { |task |
+      task[:thread].join if task[:wait]
+    }
   end
 end
 #begin

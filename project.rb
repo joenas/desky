@@ -41,6 +41,7 @@ private
   end
 end
 
+# the Task thingy
 class Task
   attr_accessor :cmd, :wait, :capture, :args
 
@@ -60,12 +61,19 @@ class Task
     end
   end
 
-  def run
-    Thread.new { `#{command}` }
-    #{}`#{command}`
-      #return system
-    #end
-    #rescue Errno::ENOENT
-     # puts "hej hej"
+  def run_in_thread(error_handler, result_handler)
+    Thread.new(cmd) do |cmd|
+      result = `#{command}` rescue error_handler.call(cmd)
+      result_handler.call(cmd, result) if capture
+      yield self if block_given?
+    end
   end
+
+  # def run
+  #   lambda {
+  #     ret = `#{command}` rescue say_status(:error, "#{cmd}", :red)
+  #     print_result ret, cmd if capture
+  #     say_status :stopping, "#{cmd}, status #{$?.exitstatus}", :blue
+  #   }
+  # end
 end
