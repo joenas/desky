@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require "desky"
+Desky::Desky.start
