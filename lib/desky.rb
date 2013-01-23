@@ -7,7 +7,8 @@ module Desky
 
   class Desky < Thor
     include Thor::Actions
-    APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath)
+    #APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath)
+    APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath+"../")
     EDITOR = 'nano'
 
     map "-o" => :open
@@ -29,6 +30,7 @@ module Desky
 
     desc 'list', "Lists all your projects."
     def list
+      puts APP_ROOT
       projects = Dir.glob("#{APP_ROOT}/projects/*.json").map { |file| file[/\/*(\w*)\./, 1] }
       print_in_columns projects
     end
@@ -61,7 +63,7 @@ module Desky
 
   private
     def project_exist_or_exit(name)
-      project_missing name and exit unless project_exists? name
+      project_missing name and exit 1 unless project_exists? name
     end
 
     def project_missing(name)
@@ -111,4 +113,4 @@ module Desky
   end
 end
 
-#Desky::Desky.start
+Desky::Desky.start
