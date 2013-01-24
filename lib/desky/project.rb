@@ -1,8 +1,6 @@
 # The litle project file. Reads from json
 module Desky
-
   class Project
-
     # prints msg and exits!
     class ExitError < StandardError
       def initialize(msg)

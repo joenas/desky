@@ -1,15 +1,15 @@
 require 'thor'
+require 'pathname'
 
 module Desky
-  require 'desky/project'
-  require 'desky/task'
-  require 'pathname'
+  APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath+"../")
+
+  require 'desky/project_manager'
+
 
   class Desky < Thor
     include Thor::Actions
     #APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath)
-    APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath+"../")
-    EDITOR = 'nano'
 
     map "-o" => :open
     map "-d" => :delete
@@ -21,7 +21,6 @@ module Desky
     desc 'open PROJECT (-o)', 'Opens your project!'
     def open(name)
       project_exist_or_exit name
-      #say "\n" #"Running '#{name}':"
       say_status :open, project_file(name)
       run_in_threads name
       rescue Interrupt
@@ -30,56 +29,44 @@ module Desky
 
     desc 'list', "Lists all your projects."
     def list
-      puts APP_ROOT
-      projects = Dir.glob("#{APP_ROOT}/projects/*.json").map { |file| file[/\/*(\w*)\./, 1] }
-      print_in_columns projects
+      print_in_columns ProjectManager.new.all
     end
 
     desc 'show PROJECT (-s)', 'show a project and its tasks.'
     def show(name)
-      project_exist_or_exit name
-      project = Project.new(name)
-      say "Project:\n  #{name} - #{project_file(name)}\n\nTasks:"
-      project.show_tasks task_presenter
+      #project_exist_or_exit name
+      #project = Project.new(name)
+      pm = ProjectManager.new(project_error_handler)
+      project = pm.find(name)
+#      project.tasks
+#      say "Project:\n  #{name} - #{project_file(name)}\n\nTasks:"
+      #project.show_tasks task_presenter
       say "\n"
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'
     def new(name)
-      create_file project_file(name), { task: { command: 'desky', args: "view #{name}"} }.to_json
+      pm = ProjectManager.new
+      file = pm.project_file name
+      create_file file
     end
 
     desc 'edit PROJECT (-e)', 'Edit your project. '
     def edit(name)
-      project_exist_or_exit name
-      system "nano #{project_file name}"
+      pm = ProjectManager.new
+      pm.edit name
     end
 
     desc 'delete PROJECT (-d)', 'Delete a project. '
     def delete(name)
-      project_exist_or_exit name
-      remove_file project_file(name)
+      pm = ProjectManager.new
+      file = pm.project_file name
+      remove_file file
     end
 
   private
-    def project_exist_or_exit(name)
-      project_missing name and exit 1 unless project_exists? name
-    end
-
-    def project_missing(name)
-      say_status :error, "Project '#{name}' does not exist.", :red
-    end
-
-    def project_file(name)
-      "#{project_root}/#{name}.json"
-    end
-
-    def project_root
-      "#{APP_ROOT}/projects"
-    end
-
-    def project_exists?(name)
-      File.exists? project_file(name)
+    def project_error_handler
+      ->(msg) { say_status :error, msg, :red }
     end
 
     def task_presenter
