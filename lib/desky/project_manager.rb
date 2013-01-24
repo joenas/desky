@@ -8,6 +8,7 @@ module Desky
 
     def initialize(error_handler = default_error_handler)
       @error_handler = error_handler
+      #@project_persistor = FilePersistor.new
     end
 
     def find(name)
