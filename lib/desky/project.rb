@@ -1,11 +1,10 @@
-# The litle project file. Reads from json
 module Desky
+ # The little project file. Reads from json
   class Project
 
-    def initialize(persistor)
-      @persistor = persistor#.new(name)
-      puts @persistor.public_methods(false).inspect
-      @tasks = @persistor.load_tasks
+    def initialize(tasks)
+      #@persistor = persistor#.new(name)
+      @tasks = tasks
     end
 
     def tasks
