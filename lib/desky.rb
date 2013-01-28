@@ -10,7 +10,11 @@ module Desky
   # whoop whoop
   class Desky < Thor
     include Thor::Actions
-    #APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath)
+
+    def initialize(*args)
+      @project_manager = ProjectManager.new
+      super
+    end
 
     map "-o" => :open
     map "-d" => :delete
@@ -21,35 +25,33 @@ module Desky
 
     desc 'open PROJECT (-o)', 'Opens your project!'
     def open(name)
-      pm = ProjectManager.new
-      pm.run_project name
+      @project_manager.run_project name
     end
 
     desc 'list', "Lists all your projects."
     def list
-      print_in_columns ProjectManager.new.all
+      say "Projects: "
+      print_in_columns @project_manager.all
     end
 
     desc 'show PROJECT (-s)', 'show a project and its tasks.'
     def show(name)
-      pm = ProjectManager.new
-      project = pm.show(name)
+      project = @project_manager.show(name)
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'
     def new(name)
-      ProjectManager.new.create name
+      @project_manager.create name
     end
 
     desc 'edit PROJECT (-e)', 'Edit your project. '
     def edit(name)
-      pm = ProjectManager.new
-      pm.edit name
+      @project_manager.edit name
     end
 
     desc 'delete PROJECT (-d)', 'Delete a project. '
     def delete(name)
-      pm = ProjectManager.new.delete name
+      @project_manager.delete name
     end
 
     desc 'debug', 'Show debug info'

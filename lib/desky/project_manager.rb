@@ -2,7 +2,7 @@
 module Desky
   require 'desky/project'
   require 'desky/task'
-  require 'desky/project_file_persistor'
+  require 'json/pure'
 
   # not an irresponsible module
   class ProjectManager < Thor
@@ -11,8 +11,7 @@ module Desky
     EDITOR = 'nano'
     DESKY_DIR = File.join(Dir.home, '.desky')
 
-    def initialize#(error_handler = default_error_handler)
-      #   @error_handler = error_handler
+    def initialize
       check_project_dir
       super
     end
@@ -37,14 +36,9 @@ module Desky
         print_table load_project(name)
       end
 
-      def new_project(name)
-        project_file name
-        #contents = { task: { command: 'desky', args: "view #{name}"} }.to_json
-      end
-
       def create(name)
         file = project_file name
-        create_file file
+        create_file file, { task: { command: 'desky', args: "view #{name}"} }.to_json
       end
 
       def edit(name)
@@ -58,12 +52,13 @@ module Desky
       end
 
       def error(msg)
-        @error_handler.(msg)
+        say_status :error, msg, :red
       end
 
-      # def destination_root
-      #   DESKY_DIR
-      # end
+      def error_and_exit(msg = 'Something went wrong!', status = 'error', color = :red)
+        say_status status, msg, color
+        exit 1
+      end
     end
 
     private
@@ -75,9 +70,9 @@ module Desky
         json = File.read project_file(name)
         JSON.parse(json)
       rescue Errno::ENOENT
-        raise ExitError, "Error: File '#{@file}' doesnt exist, please create."
+        error_and_exit("File '#{@file}' does not exist, please create.")
       rescue JSON::ParserError => error
-        raise ExitError, "JSON Error: #{error.message}"
+        error_and_exit(error.message, 'JSON error')
       end
 
       def check_project_dir

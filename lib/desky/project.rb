@@ -3,7 +3,6 @@ module Desky
   class Project
 
     def initialize(tasks)
-      #@persistor = persistor#.new(name)
       @tasks = tasks
     end
 
