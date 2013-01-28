@@ -36,7 +36,7 @@ module Desky
 
     desc 'show PROJECT (-s)', 'show a project and its tasks.'
     def show(name)
-      project = @project_manager.show(name)
+      @project_manager.show(name)
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'

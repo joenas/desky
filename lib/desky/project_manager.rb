@@ -55,7 +55,7 @@ module Desky
         say_status :error, msg, :red
       end
 
-      def error_and_exit(msg = 'Something went wrong!', status = 'error', color = :red)
+      def error_and_exit(msg = 'Something went wrong!', status = :error, color = :red)
         say_status status, msg, color
         exit 1
       end
@@ -80,8 +80,7 @@ module Desky
         if yes? "Directory '~/.desky' does not exist, do you want to create it?"
           Dir.mkdir(DESKY_DIR, 0700)
         else
-          say_status :exiting, "Desky needs a homedir to run!", :red
-          exit 1
+          error_and_exit("Desky needs a homedir to work!", :exiting)
         end
       end
 
