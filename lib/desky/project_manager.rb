@@ -1,4 +1,3 @@
-
 module Desky
   require 'desky/project'
   require 'desky/task'
@@ -17,10 +16,6 @@ module Desky
     end
 
     no_tasks do
-      def load_tasks
-        load_project
-      end
-
       def run_project(name)
         run_in_threads name
       rescue Interrupt
@@ -31,80 +26,68 @@ module Desky
         Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
       end
 
-      def show(name)
+      def create(name)
+        create_file project_file(name),
+                    { task: { command: 'ping', args: "-c 2 google.com", verbose: true, wait: true } }.to_json
+      end
+
+      def read(name)
         project_exist_or_exit name
         print_table load_project(name)
       end
 
-      def create(name)
-        file = project_file name
-        create_file file, { task: { command: 'ping', args: "-c 2 google.com", verbose: true, wait: true } }.to_json
-      end
-
-      def edit(name)
+      def update(name)
         project_exist_or_exit name
         system "#{EDITOR} #{project_file name}"
       end
 
       def delete(name)
-        file = project_file name
-        remove_file file
-      end
-
-      def error(msg)
-        say_status :error, msg, :red
-      end
-
-      def error_and_exit(msg = 'Something went wrong!', status = :error, color = :red)
-        say_status status, msg, color
-        exit 1
+        remove_file project_file name
       end
     end
 
-    private
-      def project_file(name)
-        "#{DESKY_DIR}/#{name}.json"
-      end
+  private
+    def error(msg)
+      say_status :error, msg, :red
+    end
 
-      def load_project(name)
-        json = File.read project_file(name)
-        JSON.parse(json)
-      rescue Errno::ENOENT
-        error_and_exit("File '#{@file}' does not exist, please create.")
-      rescue JSON::ParserError => error
-        error_and_exit(error.message, 'JSON error')
-      end
+    def error_and_exit(msg = 'Something went wrong!', status = :error, color = :red)
+      say_status status, msg, color
+      exit 1
+    end
 
-      def check_project_dir
-        return if (File.exists? DESKY_DIR)
-        if yes? "Directory '~/.desky' does not exist, do you want to create it?"
-          Dir.mkdir(DESKY_DIR, 0700)
-        else
-          error_and_exit("Desky needs a homedir to work!", :exiting)
-        end
+    def project_file(name)
+      "#{DESKY_DIR}/#{name}.json"
+    end
+
+    def load_project(name)
+      json = File.read project_file(name)
+      JSON.parse(json)
+    rescue Errno::ENOENT
+      error_and_exit("File '#{@file}' does not exist, please create.")
+    rescue JSON::ParserError => error
+      error_and_exit(error.message, 'JSON error')
+    end
+
+    def check_project_dir
+      return if (File.exists? DESKY_DIR)
+      if yes? "Directory '~/.desky' does not exist, do you want to create it?"
+        Dir.mkdir(DESKY_DIR, 0700)
+      else
+        error_and_exit("Desky needs a homedir to work!", :exiting)
       end
+    end
 
     def self.source_root
       File.dirname(__FILE__)
     end
 
     def project_exist_or_exit(name)
-      unless project_exists? name
-        project_missing name
-        exit 1
-      end
-    end
-
-    def project_missing(name)
-      error("Project '#{name}' does not exist.")
+      error_and_exit("Project '#{name}' does not exist.") unless project_exists? name
     end
 
     def project_exists?(name)
       File.exists? project_file(name)
-    end
-
-    def default_error_handler
-      ->(msg) {puts msg}
     end
 
     def error_handler
@@ -115,10 +98,7 @@ module Desky
       ->(status, msg) { say_status status, msg, :blue }
     end
 
-    def self.source_root
-      File.dirname(__FILE__)
-    end
-
+    # refactor to ProjectRunner (and substitute Project.rb)
     def run_in_threads(name)
       project = Project.new(load_project(name))
       @tasks = project.tasks.map { |task|

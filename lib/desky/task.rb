@@ -1,7 +1,7 @@
 module Desky
   # the Task thingy
   class Task
-    attr_accessor :cmd, :wait, :verbose, :args
+    attr_reader :cmd, :wait, :verbose, :args
 
     def initialize(options)
       @cmd, @args = options['command'], options['args']
@@ -17,10 +17,6 @@ module Desky
       else
         @cmd
       end
-    end
-
-    def show
-      ["  #{@cmd}", @args]
     end
 
     def wait?

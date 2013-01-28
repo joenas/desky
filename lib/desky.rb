@@ -35,7 +35,7 @@ module Desky
 
     desc 'show PROJECT (-s)', 'Show a project and its tasks.'
     def show(name)
-      @project_manager.show(name)
+      @project_manager.read(name)
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'
@@ -45,7 +45,7 @@ module Desky
 
     desc 'edit PROJECT (-e)', 'Edit your project. '
     def edit(name)
-      @project_manager.edit name
+      @project_manager.update name
     end
 
     desc 'delete PROJECT (-d)', 'Delete a project. '
