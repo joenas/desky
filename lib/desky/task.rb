@@ -1,11 +1,11 @@
 module Desky
   # the Task thingy
   class Task
-    attr_accessor :cmd, :wait, :capture, :args
+    attr_accessor :cmd, :wait, :verbose, :args
 
     def initialize(options)
       @cmd, @args = options['command'], options['args']
-      @wait, @capture = options['wait'], options['capture']
+      @wait, @verbose = options['wait'], options['verbose']
     end
 
     def command
@@ -32,7 +32,7 @@ module Desky
         begin
           output_handler.call('running', "#{@cmd}\n")
           result = `#{command}`
-          format_output result, output_handler if @capture
+          format_output result, output_handler if verbose
           status = $?.success? ? 'SUCCESS' : 'FAILURE'
           output_handler.call('finished', "#{@cmd}: #{status}")
         rescue => error

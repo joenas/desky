@@ -1,11 +1,9 @@
 require 'thor'
-require 'pathname'
 
 module Desky
-  APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath+"../")
-
   require 'desky/project_manager'
   require 'desky/errors'
+  require 'desky/version'
 
   # whoop whoop
   class Desky < Thor
@@ -22,6 +20,7 @@ module Desky
     map "-n" => :new
     map "-c" => :new
     map "-s" => :show
+    map "-v" => :version
 
     desc 'open PROJECT (-o)', 'Opens your project!'
     def open(name)
@@ -34,7 +33,7 @@ module Desky
       print_in_columns @project_manager.all
     end
 
-    desc 'show PROJECT (-s)', 'show a project and its tasks.'
+    desc 'show PROJECT (-s)', 'Show a project and its tasks.'
     def show(name)
       @project_manager.show(name)
     end
@@ -54,12 +53,12 @@ module Desky
       @project_manager.delete name
     end
 
-    desc 'debug', 'Show debug info'
-    def debug
-      puts "\n"
-      print_table [['APP_ROOT', APP_ROOT]]
-      puts "\n"
+    desc 'version (-v)', 'Shows Desky version'
+    def version
+      say VERSION
     end
+
+    #default_task :open
   end
 end
 

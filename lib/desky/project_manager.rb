@@ -38,7 +38,7 @@ module Desky
 
       def create(name)
         file = project_file name
-        create_file file, { task: { command: 'desky', args: "view #{name}"} }.to_json
+        create_file file, { task: { command: 'ping', args: "-c 2 google.com", verbose: true, wait: true } }.to_json
       end
 
       def edit(name)
