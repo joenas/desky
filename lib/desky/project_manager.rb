@@ -1,6 +1,7 @@
 module Desky
   require 'desky/project'
   require 'desky/task'
+  require 'desky/project_file_persistor'
 
   class ProjectManager
     EDITOR = 'nano'
@@ -8,12 +9,13 @@ module Desky
 
     def initialize(error_handler = default_error_handler)
       @error_handler = error_handler
-      #@project_persistor = FilePersistor.new
+      @project_persistor = ProjectFilePersistor
     end
 
     def find(name)
       project_exist_or_exit name
-      Project.new(name)
+      project = Project.new(@project_persistor.new(name))
+      puts project.tasks
     end
 
     def all

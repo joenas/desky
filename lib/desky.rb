@@ -5,7 +5,7 @@ module Desky
   APP_ROOT = File.dirname(Pathname.new(__FILE__).realpath+"../")
 
   require 'desky/project_manager'
-
+  require 'desky/errors'
 
   class Desky < Thor
     include Thor::Actions
@@ -34,8 +34,6 @@ module Desky
 
     desc 'show PROJECT (-s)', 'show a project and its tasks.'
     def show(name)
-      #project_exist_or_exit name
-      #project = Project.new(name)
       pm = ProjectManager.new(project_error_handler)
       project = pm.find(name)
 #      project.tasks
@@ -62,6 +60,13 @@ module Desky
       pm = ProjectManager.new
       file = pm.project_file name
       remove_file file
+    end
+
+    desc 'debug', 'Show debug info'
+    def debug
+      puts "\n"
+      print_table [['APP_ROOT', APP_ROOT]]
+      puts "\n"
     end
 
   private
