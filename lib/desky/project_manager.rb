@@ -12,6 +12,7 @@ module Desky
 
     def initialize
       check_project_dir
+      @projects = Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
       super
     end
 
@@ -23,7 +24,8 @@ module Desky
       end
 
       def all
-        Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
+        @projects
+        #Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
       end
 
       def create(name)
@@ -87,7 +89,8 @@ module Desky
     end
 
     def project_exists?(name)
-      File.exists? project_file(name)
+      #File.exists? project_file(name)
+      @projects.include? name
     end
 
     def error_handler
