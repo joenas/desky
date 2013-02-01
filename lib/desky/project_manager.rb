@@ -1,5 +1,7 @@
 module Desky
+  require 'desky/output'
   require 'desky/project'
+  require 'desky/project_runner'
   require 'desky/task'
   require 'json/pure'
 
@@ -18,14 +20,15 @@ module Desky
 
     no_tasks do
       def run_project(name)
-        run_in_threads name
+        output = Output.new output_handler, error_handler
+        project_runner = ProjectRunner.new load_project(name), output
+        project_runner.run_tasks
       rescue Interrupt
         say_status :exit, "User interrupt!\n", :red
       end
 
       def all
         @projects
-        #Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
       end
 
       def create(name)
@@ -89,7 +92,6 @@ module Desky
     end
 
     def project_exists?(name)
-      #File.exists? project_file(name)
       @projects.include? name
     end
 
@@ -99,20 +101,6 @@ module Desky
 
     def output_handler
       ->(status, msg) { say_status status, msg, :blue }
-    end
-
-    # refactor to ProjectRunner (and substitute Project.rb)
-    def run_in_threads(name)
-      project = Project.new(load_project(name))
-      @tasks = project.tasks.map { |task|
-        {
-          thread: task.call(output_handler, error_handler),
-          wait: task.wait?
-        }
-      }
-      @tasks.each { |task |
-        task[:thread].join if task[:wait]
-      }
     end
   end
 end

@@ -1,9 +1,10 @@
 module Desky
   # the Task thingy
   class Task
-    attr_reader :cmd, :wait, :verbose, :args
+    #attr_reader :cmd#, :wait, :verbose, :args
 
-    def initialize(options)
+    def initialize(options, output_handler)
+      @output_handler = output_handler
       @cmd, @args = options['command'], options['args']
       @wait, @verbose = options['wait'], options['verbose']
     end
@@ -23,38 +24,30 @@ module Desky
       @wait
     end
 
-    def call(output_handler = default_output_handler, error_handler = default_error_handler)
+    def run
       Thread.new {
         begin
-          output_handler.call('running', "#{@cmd}\n")
-          result = `#{command}`
-          format_output result, output_handler if verbose
-          status = $?.success? ? 'SUCCESS' : 'FAILURE'
-          output_handler.call('finished', "#{@cmd}: #{status}")
+          @output_handler.output('running', "#{@cmd}\n")
+          @result = `#{command}`
+          print_result
         rescue => error
-          error_handler.call(@cmd, error.message)
+          @output_handler.error @cmd, error.message
         end
       }
     end
 
   private
 
-    def format_output(output, output_handler)
+    def print_result
+      format_output @result if @verbose
+      status = $?.success? ? 'SUCCESS' : 'FAILURE'
+      @output_handler.result 'finished', "#{@cmd}: #{status}"
+    end
+
+    def format_output(output)
       output.split("\n").each do | line |
-        output_handler.call(@cmd, line)
+        @output_handler.output @cmd, line
       end
-    end
-
-    def default_output_handler
-      lambda { |cmd, result|
-        puts "#{cmd}: #{result}"
-      }
-    end
-
-    def default_error_handler
-      lambda {|cmd, msg|
-        puts "Error: #{cmd} #{msg}"
-      }
     end
   end
 end

@@ -19,23 +19,23 @@ module Desky
     map "-e" => :edit
     map "-n" => :new
     map "-c" => :new
+    map "-l" => :list
     map "-s" => :show
     map "-v" => :version
 
-    desc 'open PROJECT (-o)', 'Opens your project!'
+    desc '(open) PROJECT (-o)', 'Opens your project!'
     def open(name)
       @project_manager.run_project name
     end
 
     desc 'list', "Lists all your projects."
     def list
-      say "Projects: "
-      print_in_columns @project_manager.all
+      say_status "Projects: ", @project_manager.all*"  ", :blue
     end
 
     desc 'show PROJECT (-s)', 'Show a project and its tasks.'
     def show(name)
-      @project_manager.read(name)
+      @project_manager.read name
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'
@@ -50,7 +50,7 @@ module Desky
 
     desc 'delete PROJECT (-d)', 'Delete a project. '
     def delete(name)
-      @project_manager.delete name
+      @project_manager.delete name if yes? "Are you sure?"
     end
 
     desc 'version (-v)', 'Shows Desky version'
@@ -58,8 +58,15 @@ module Desky
       say VERSION
     end
 
+    def method_missing(name, *args)
+      return send :open, name if @project_manager.all.include? name.to_s
+      say_status :error,  "Could not find task or project \"#{name}\"!", :red
+      send :help
+      #super
+    end
+
     #default_task :open
   end
 end
 
-Desky::Desky.start
+#Desky::Desky.start
