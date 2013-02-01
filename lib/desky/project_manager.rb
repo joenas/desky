@@ -1,6 +1,5 @@
 module Desky
   require 'desky/output'
-  require 'desky/project'
   require 'desky/project_runner'
   require 'desky/task'
   require 'json/pure'
