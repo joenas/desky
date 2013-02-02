@@ -15,6 +15,11 @@ module Desky
       @error_output.call cmd, error
     end
 
+    def exit_error(cmd, message)
+      error cmd, message
+      exit 1
+    end
+
     alias :output :result
 
   private

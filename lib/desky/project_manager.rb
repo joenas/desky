@@ -10,10 +10,12 @@ module Desky
 
     EDITOR = 'nano'
     DESKY_DIR = File.join(Dir.home, '.desky')
+    FORMAT = 'yml'
+    PROJECT_TEMPLATE = { 'tasks' => [ { 'command' => 'ping', 'args' => "-c 2 google.com", 'options' => 'verbose wait' } ] }
 
     def initialize
       check_project_dir
-      @projects = Dir.glob("#{DESKY_DIR}/*.json").map { |file| file[/\/*(\w*)\.json/, 1] }
+      @projects = Dir.glob("#{DESKY_DIR}/*.#{FORMAT}").map { |file| file[/\/*(\w*)\.#{FORMAT}/, 1] }
       super
     end
 
@@ -31,8 +33,7 @@ module Desky
       end
 
       def create(name)
-        create_file project_file(name),
-                    { task: { command: 'ping', args: "-c 2 google.com", verbose: true, wait: true } }.to_json
+        create_file project_file(name), Psych.dump(PROJECT_TEMPLATE)
       end
 
       def read(name)
@@ -61,16 +62,18 @@ module Desky
     end
 
     def project_file(name)
-      "#{DESKY_DIR}/#{name}.json"
+      "#{DESKY_DIR}/#{name}.yml"
     end
 
     def load_project(name)
-      json = File.read project_file(name)
-      JSON.parse(json)
+      Psych.load_file( project_file(name) )
+
     rescue Errno::ENOENT
-      error_and_exit("File '#{@file}' does not exist, please create.")
+      error_and_exit("File '#{name}' does not exist, please create.")
     rescue JSON::ParserError => error
       error_and_exit(error.message, 'JSON error')
+    rescue Psych::SyntaxError => error
+      error_and_exit(error.message, 'YAML error')
     end
 
     def check_project_dir
@@ -95,11 +98,11 @@ module Desky
     end
 
     def error_handler
-      ->(cmd, msg) { say_status :error, "'#{cmd}': #{msg}", :red }
+      ->(cmd, msg) { say_status :error, "'#{cmd}': #{msg.chomp}\n", :red }
     end
 
     def output_handler
-      ->(status, msg) { say_status status, msg, :blue }
+      ->(status, msg) { say_status status, "#{msg.chomp}\n", :blue }
     end
 
     # def output_handler

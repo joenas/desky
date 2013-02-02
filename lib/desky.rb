@@ -4,6 +4,7 @@ module Desky
   require 'desky/project_manager'
   require 'desky/errors'
   require 'desky/version'
+  require 'psych'
 
   # whoop whoop
   class Desky < Thor
