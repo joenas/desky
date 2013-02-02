@@ -1,8 +1,6 @@
 module Desky
   # the Task thingy
   class Task
-    #attr_reader :cmd#, :wait, :verbose, :args
-
     def initialize(options, output_handler)
       @output_handler = output_handler
       @cmd, @args = options['command'], options['args']
@@ -29,7 +27,7 @@ module Desky
         begin
           @output_handler.output('running', "#{@cmd}\n")
           @result = `#{command}`
-          print_result
+          print_result if @verbose
         rescue => error
           @output_handler.error @cmd, error.message
         end
@@ -37,9 +35,8 @@ module Desky
     end
 
   private
-
     def print_result
-      format_output @result if @verbose
+      format_output @result
       status = $?.success? ? 'SUCCESS' : 'FAILURE'
       @output_handler.result 'finished', "#{@cmd}: #{status}"
     end

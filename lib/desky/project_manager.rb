@@ -101,5 +101,10 @@ module Desky
     def output_handler
       ->(status, msg) { say_status status, msg, :blue }
     end
+
+    # def output_handler
+    #   ->(status, msg) { say "#{set_color(status, :blue)}: #{msg}" }
+    # end
   end
 end
+

@@ -60,12 +60,9 @@ module Desky
 
     def method_missing(name, *args)
       return send :open, name if @project_manager.all.include? name.to_s
-      say_status :error,  "Could not find task or project \"#{name}\"!", :red
+      say "Could not find task or project \"#{name}\"!", :red
       send :help
-      #super
     end
-
-    #default_task :open
   end
 end
 
