@@ -70,8 +70,6 @@ module Desky
 
     rescue Errno::ENOENT
       error_and_exit("File '#{name}' does not exist, please create.")
-    rescue JSON::ParserError => error
-      error_and_exit(error.message, 'JSON error')
     rescue Psych::SyntaxError => error
       error_and_exit(error.message, 'YAML error')
     end
