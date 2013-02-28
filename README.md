@@ -11,6 +11,8 @@ Specs will be written..
 
 ## Usage
 
+Run Desky the first time from command line and it will create ~/.desky for you where your projects live.
+
     desky (open) PROJECT (-o)  # Opens your project!
     desky delete PROJECT (-d)  # Delete a project. 
     desky edit PROJECT (-e)    # Edit your project. 
@@ -19,6 +21,25 @@ Specs will be written..
     desky new PROJECT (-n|-c)  # Make a new project.
     desky show PROJECT (-s)    # Show a project and its tasks.
     desky version (-v)         # Shows Desky version
+
+### Sample project file:
+
+    ---
+    tasks:
+      - command: ping
+        args: -c 2 10.0.0.1
+        options: wait verbose
+      - command: ping
+        args:
+          - -c 2
+          - 10.0.0.10
+        options: verbose wait
+
+### Options:
+
+* wait: thread with command will join until finished
+* verbose: result from command will be printed in terminal
+
 
 ## Contributing
 
