@@ -1,24 +1,24 @@
 # Desky
 
-TODO: Write a gem description
+A simple command-line launcher for projects. List a few commands/apps with arguments in a YAML-file and open them quickly from your prompt.
+Specs will be written..
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-    gem 'desky'
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
-    $ gem install desky
+    $ git clone git@github.com:joenas/desky.git
+    $ cd desky
+    $ rake install
 
 ## Usage
 
-TODO: Write usage instructions here
+    desky (open) PROJECT (-o)  # Opens your project!
+    desky delete PROJECT (-d)  # Delete a project. 
+    desky edit PROJECT (-e)    # Edit your project. 
+    desky help [TASK]          # Describe available tasks or one specific task
+    desky list                 # Lists all your projects.
+    desky new PROJECT (-n|-c)  # Make a new project.
+    desky show PROJECT (-s)    # Show a project and its tasks.
+    desky version (-v)         # Shows Desky version
 
 ## Contributing
 
@@ -27,5 +27,3 @@ TODO: Write usage instructions here
 3. Commit your changes (`git commit -am 'Added some feature'`)
 4. Push to the branch (`git push origin my-new-feature`)
 5. Create new Pull Request
-=======
-* Desky!
