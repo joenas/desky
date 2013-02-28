@@ -4,7 +4,7 @@ module Desky
     def initialize(options, output_handler)
       @output_handler = output_handler
       @cmd, @args = options['command'], options['args']
-      @wait, @verbose = options['wait'], options['verbose']
+      @options = options['options'] || ''
     end
 
     def command
@@ -19,7 +19,11 @@ module Desky
     end
 
     def wait?
-      @wait
+      @options.include? 'wait'
+    end
+
+    def verbose
+      @options.include? 'verbose'
     end
 
     def run
@@ -27,7 +31,7 @@ module Desky
         begin
           @output_handler.output('running', "#{@cmd}\n")
           @result = `#{command}`
-          print_result if @verbose
+          print_result if verbose
         rescue => error
           @output_handler.error @cmd, error.message
         end
