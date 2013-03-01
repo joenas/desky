@@ -2,7 +2,6 @@ module Desky
   require 'desky/output'
   require 'desky/project_runner'
   require 'desky/task'
-  require 'json/pure'
 
   # not an irresponsible module
   class ProjectManager < Thor
