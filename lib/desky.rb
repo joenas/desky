@@ -10,10 +10,7 @@ module Desky
   class Desky < Thor
     include Thor::Actions
 
-    def initialize(*args)
-      @project_manager = ProjectManager.new
-      super
-    end
+    PROJECT_MANAGER = ProjectManager.new
 
     map "-o" => :open
     map "-d" => :delete
@@ -26,32 +23,32 @@ module Desky
 
     desc '(open) PROJECT (-o)', 'Opens your project!'
     def open(name)
-      @project_manager.run_project name
+      PROJECT_MANAGER.run_project name
     end
 
     desc 'list', "Lists all your projects."
     def list
-      say_status "Projects: ", @project_manager.all*"  ", :blue
+      say_status "Projects: ", PROJECT_MANAGER.all*"  ", :blue
     end
 
     desc 'show PROJECT (-s)', 'Show a project and its tasks.'
     def show(name)
-      @project_manager.read name
+      PROJECT_MANAGER.read name
     end
 
     desc 'new PROJECT (-n|-c)', 'Make a new project.'
     def new(name)
-      @project_manager.create name
+      PROJECT_MANAGER.create name
     end
 
     desc 'edit PROJECT (-e)', 'Edit your project. '
     def edit(name)
-      @project_manager.update name
+      PROJECT_MANAGER.update name
     end
 
     desc 'delete PROJECT (-d)', 'Delete a project. '
     def delete(name)
-      @project_manager.delete name if yes? "Are you sure?"
+      PROJECT_MANAGER.delete name if yes? "Are you sure?"
     end
 
     desc 'version (-v)', 'Shows Desky version'
@@ -59,12 +56,10 @@ module Desky
       say VERSION
     end
 
-    def method_missing(name, *args)
-      return send :open, name if @project_manager.all.include? name.to_s
+    def method_missing(name)
+      return send :open, name if PROJECT_MANAGER.all.include? name.to_s
       say "Could not find task or project \"#{name}\"!", :red
       send :help
     end
   end
 end
-
-#Desky::Desky.start

@@ -15,6 +15,5 @@ Gem::Specification.new do |gem|
   gem.name          = "desky"
   gem.require_paths = ["lib"]
   gem.version       = Desky::VERSION
-  gem.add_runtime_dependency "thor"
-  gem.add_runtime_dependency "json"
+  gem.add_runtime_dependency "thor", ">=0.16"
 end
