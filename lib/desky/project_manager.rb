@@ -1,4 +1,5 @@
 module Desky
+  require 'desky/configuration'
   require 'desky/output'
   require 'desky/project_runner'
   require 'desky/task'
@@ -7,18 +8,21 @@ module Desky
   class ProjectManager < Thor
     include Thor::Actions
 
-    EDITOR = 'nano'
-    DESKY_DIR = File.join(Dir.home, '.desky')
-    FORMAT = 'yml'
     PROJECT_TEMPLATE = { 'tasks' => [ { 'command' => 'ping', 'args' => "-c 2 google.com", 'options' => 'verbose wait' } ] }
 
     def initialize
       check_project_dir
-      @projects = Dir.glob("#{DESKY_DIR}/*.#{FORMAT}").map { |file| file[/\/*(\w*)\.#{FORMAT}/, 1] }
+      @config = config
+      @projects = Dir.glob("#{config[:projects_dir]}/*.#{config[:format]}").map { |file| file[/\/*(\w*)\.#{config[:format]}/, 1] }
       super
     end
 
     no_tasks do
+
+      def config
+        @config ||= Configuration.new
+      end
+
       def run_project(name)
         output = Output.new output_handler, error_handler
         project_runner = ProjectRunner.new load_project(name), output
@@ -42,7 +46,7 @@ module Desky
 
       def update(name)
         project_exist_or_exit name
-        system "#{EDITOR} #{project_file name}"
+        system "#{config[:editor]} #{project_file name}"
       end
 
       def delete(name)
@@ -61,22 +65,21 @@ module Desky
     end
 
     def project_file(name)
-      "#{DESKY_DIR}/#{name}.yml"
+      "#{config[:projects_dir]}/#{name}.yml"
     end
 
     def load_project(name)
       Psych.load_file( project_file(name) )
-
-    rescue Errno::ENOENT
-      error_and_exit("File '#{name}' does not exist, please create.")
-    rescue Psych::SyntaxError => error
-      error_and_exit(error.message, 'YAML error')
+      rescue Errno::ENOENT
+        error_and_exit("File '#{name}' does not exist, please create.")
+      rescue Psych::SyntaxError => error
+        error_and_exit(error.message, 'YAML error')
     end
 
     def check_project_dir
-      return if (File.exists? DESKY_DIR)
+      return if (File.exists? config[:projects_dir])
       if yes? "Directory '~/.desky' does not exist, do you want to create it?"
-        Dir.mkdir(DESKY_DIR, 0700)
+        Dir.mkdir(config[:projects_dir], 0700)
       else
         error_and_exit("Desky needs a homedir to work!", :exiting)
       end
@@ -101,10 +104,6 @@ module Desky
     def output_handler
       ->(status, msg) { say_status status, "#{msg.chomp}\n", :blue }
     end
-
-    # def output_handler
-    #   ->(status, msg) { say "#{set_color(status, :blue)}: #{msg}" }
-    # end
   end
 end
 

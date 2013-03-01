@@ -12,6 +12,10 @@ module Desky
 
     PROJECT_MANAGER = ProjectManager.new
 
+    def self.configure
+      yield PROJECT_MANAGER.config if block_given?
+    end
+
     map "-o" => :open
     map "-d" => :delete
     map "-e" => :edit

@@ -1,4 +1,8 @@
 #!/usr/bin/env ruby
 
 require "desky"
+
+Desky::Desky.configure do |config|
+  config.editor = 'vi'
+end
 Desky::Desky.start
